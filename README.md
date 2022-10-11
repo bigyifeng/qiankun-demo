@@ -1,0 +1,183 @@
+# 此项目是用来从 0-1 探索 qiankun 微前端框架的可行性
+
+## 第一步：新建项目
+
+新建 main 主应用和两个使用 vue/cli 创建的子应用
+
+```ssh
+vue create main
+vue create vue2-app-1
+vue create vue2-app-2
+```
+
+## 第二步：所有应用都安装 qiankun
+
+```ssh
+yarn add qiankun
+```
+
+## 第三步：主应用引入 qiankun
+
+main 项目中的 main.js
+
+```js
+import Vue from "vue";
+import App from "./App.vue";
+import router from "./router";
+import { registerMicroApps, start } from "qiankun";
+
+Vue.config.productionTip = false;
+
+registerMicroApps([
+  {
+    name: "vue2 app 1", //子应用名称
+    entry: "//localhost:10001", //子应用端口号
+    container: "#v2-app-1", //子应用挂载的元素
+    activeRule: "/v2-app-1", //子应用路径
+  },
+  {
+    name: "vue2 app 2",
+    entry: "//localhost:10002",
+    container: "#v2-app-2",
+    activeRule: "/v2-app-2",
+  },
+]);
+// 启动 qiankun
+start();
+
+new Vue({
+  router,
+  render: h => h(App),
+}).$mount("#app");
+```
+
+main 项目中的 App.vue
+
+```vue
+<template>
+  <div id="app">
+    <h1>主应用</h1>
+    <nav>
+      <router-link to="/v2-app-1">v2-app-1</router-link>
+      |
+      <router-link to="/v2-app-2">v2-app-2</router-link>
+    </nav>
+
+    <!-- 子应用占位 -->
+    <div id="v2-app-1"></div>
+    <div id="v2-app-2"></div>
+  </div>
+</template>
+```
+
+## 第四步：子应用配置
+
+1. 在 src 目录新增 public-path.js：
+
+```js
+if (window.__POWERED_BY_QIANKUN__) {
+  __webpack_public_path__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__;
+}
+```
+
+2. 入口文件 main.js 修改，为了避免根 id #app 与其他的 DOM 冲突，需要限制查找范围。
+
+```js
+import "./public-path";
+import Vue from "vue";
+import VueRouter from "vue-router";
+import App from "./App.vue";
+import routes from "./router";
+
+Vue.config.productionTip = false;
+
+let router = null;
+let instance = null;
+function render(props = {}) {
+  const { container } = props;
+  router = new VueRouter({
+    base: window.__POWERED_BY_QIANKUN__ ? "/app-vue/" : "/",
+    mode: "history",
+    routes,
+  });
+
+  instance = new Vue({
+    router,
+    render: h => h(App),
+  }).$mount(container ? container.querySelector("#app") : "#app");
+}
+
+// 独立运行时
+if (!window.__POWERED_BY_QIANKUN__) {
+  render();
+}
+
+export async function bootstrap() {
+  console.log("[vue] vue app bootstraped");
+}
+export async function mount(props) {
+  console.log("[vue] props from main framework", props);
+  render(props);
+}
+export async function unmount() {
+  instance.$destroy();
+  instance.$el.innerHTML = "";
+  instance = null;
+  router = null;
+}
+```
+
+3. 打包配置修改（vue.config.js）：
+
+```js
+const { name } = require("./package");
+module.exports = {
+  devServer: {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  },
+  configureWebpack: {
+    output: {
+      library: `${name}-[name]`,
+      libraryTarget: "umd", // 把微应用打包成 umd 库格式
+      jsonpFunction: `webpackJsonp_${name}`,
+    },
+  },
+};
+```
+
+4. 将 router 中的 routes 进行导出
+
+src/router/index.js
+
+```js
+export default routes;
+```
+
+5. 运行子应用
+
+```ssh
+yarn serve
+```
+
+如果报错了 就降级 vue/cli 到 4 版本
+
+```json
+    "@vue/cli-plugin-babel": "~4.0.0",
+    "@vue/cli-plugin-router": "~4.0.0",
+    "@vue/cli-service": "~4.0.0",
+```
+
+## 第五步：启动主应用
+
+main
+
+```ssh
+yarn serve
+```
+
+## 结论
+
+最终一个简单的微前端就配置好了，可通过主应用的路由来控制显示哪个子应用
+[demo 项目地址](https://github.com/bigyifeng/qiankun-demo.git)
