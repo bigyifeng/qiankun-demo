@@ -28,13 +28,17 @@ if (!window.__POWERED_BY_QIANKUN__) {
   render();
 }
 
+// 子应用被引用时触发
 export async function bootstrap () {
   console.log("v2app2被项目引入");
 }
+
+// 子应用被挂载时触发
 export async function mount (props) {
   console.log("v2app2被挂载", props);
   render(props);
 }
+// 子应用被卸载时触发
 export async function unmount () {
   console.log("v2app取消挂载");
 

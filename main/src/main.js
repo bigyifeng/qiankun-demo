@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import { registerMicroApps, start } from 'qiankun';
+import { registerMicroApps, start, setDefaultMountApp } from 'qiankun';
 
 Vue.config.productionTip = false
 
@@ -18,7 +18,7 @@ registerMicroApps([
         name: 'zs',
         age: 15
       },
-    }
+    },
   },
   {
     name: 'vue2 app 2',
@@ -29,6 +29,7 @@ registerMicroApps([
 ]);
 // 启动 qiankun
 start();
+setDefaultMountApp('/v2-app-2')//默认进入的微应用
 
 new Vue({
   router,
