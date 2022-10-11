@@ -29,13 +29,15 @@ if (!window.__POWERED_BY_QIANKUN__) {
 }
 
 export async function bootstrap () {
-  console.log("[vue] vue app bootstraped");
+  console.log("v2app2被项目引入");
 }
 export async function mount (props) {
-  console.log("[vue] props from main framework", props);
+  console.log("v2app2被挂载", props);
   render(props);
 }
 export async function unmount () {
+  console.log("v2app取消挂载");
+
   instance.$destroy();
   instance.$el.innerHTML = "";
   instance = null;

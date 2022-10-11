@@ -10,7 +10,15 @@ registerMicroApps([
     name: 'vue2 app 1', //子应用名称
     entry: '//localhost:10001',//子应用端口号
     container: '#v2-app-1',//子应用挂载的元素
-    activeRule: '/v2-app-1',//子应用路径
+    activeRule: '/v2-app-1',//子应用路径匹配规则，匹配其中一个则渲染对应子应用
+    props: {
+      params1: 'zs',
+      params2: 123,
+      params3: {
+        name: 'zs',
+        age: 15
+      },
+    }
   },
   {
     name: 'vue2 app 2',
